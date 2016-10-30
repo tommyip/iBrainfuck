@@ -4,7 +4,7 @@ import argparse
 
 
 def parser(filename: str) -> str:
-
+    """ Read file content and strip everthing except brainfuck operators """
     with open(filename, 'r') as file:
         source_code = "".join(_ for _ in file.read() if _ in "><+-.,[]")
 
