@@ -4,14 +4,32 @@ import argparse
 
 
 def parser(filename: str) -> str:
+
     with open(filename, 'r') as file:
         source_code = "".join(_ for _ in file.read() if _ in "><+-.,[]")
+
+    # TODO: Error checking
 
     return source_code
 
 
 def lexier(source: str) -> list:
-    pass
+    blocks = []
+    current_block = ""
+    for op in source:
+        if op not in ["[", "]"]:
+            current_block += op
+        elif op == "[":
+            if current_block != "":
+                blocks.append(current_block)
+            current_block = "["
+        else:
+            blocks.append(current_block + "]")
+            current_block = ""
+        print(op, blocks, current_block)
+    if current_block != "":
+        blocks.append(current_block)
+    return blocks
 
 
 def interpreter(code_block: list):
