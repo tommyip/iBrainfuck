@@ -4,21 +4,22 @@ Name: iBrainfuck
 Author: Tommy Ip <hkmp7tommy@gmail.com>
 Github repo: https://gituhub.com/tommyip/iBrainfuck
 
-iBrainfuck is a interpreter for the language Brainfuck implementated in Python 3
+iBrainfuck is a interpreter for the Brainfuck language written in Python 3
 
 Testing are handled by Pytest, invoke them by running:
 
     ~$ py.test
 
-in the project's root path. Unittest are in tests/ directory and
-doctest are inline with source code.
+in the project's root path. You have to install the pytest plugin `pytest-pythonpath` in order
+for pytest to properly detect the directories. Unittest are in tests/ directory and doctest are
+inline with source code.
 
 Coming features include:
     - PyPy 3 support
     - Code Optimization
 """
 
-from sys import stderr
+import sys
 import argparse
 import getch
 from utils import extract_loops
@@ -43,7 +44,7 @@ def lexier(filename):
             ))
 
     except IOError:
-        print("[-] iBrainfuck cannot open source code with filename " + filename, file=stderr)
+        print("[-] iBrainfuck cannot open source code with filename " + filename, file=sys.stderr)
 
     return False
 
@@ -62,7 +63,7 @@ def parser(source):
 
     # Syntax checking: Check brackets balance
     if source.count("[") != source.count("]"):
-        print("[-] Syntax Error: unmatched brackets", file=stderr)
+        print("[-] Syntax Error: unmatched brackets", file=sys.stderr)
         return False
 
     return extract_loops([source])
@@ -119,6 +120,8 @@ def main():
     args = parser.parse_args()
 
     stack_size = args.size if args.size else 6000
+
+
 
 if __name__ == '__main__':
     main()
