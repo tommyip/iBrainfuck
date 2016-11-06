@@ -114,14 +114,18 @@ def evaluate(stack, block, pointer):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="iBrainfuck -> A brainfuck interpreter implementation in Python")
-    parser.add_argument("source", help="Brainfuck source file [.bf]")
-    parser.add_argument("-s", "--size", help="The size of the brainfuck array, default: 6000", type=int)
-    args = parser.parse_args()
+    argparser = argparse.ArgumentParser(description="iBrainfuck -> A brainfuck interpreter implementation in Python")
+    argparser.add_argument("source", help="Brainfuck source file [.bf]")
+    argparser.add_argument("-s", "--size", help="The size of the brainfuck array, default: 6000", type=int)
+    args = argparser.parse_args()
 
     stack_size = args.size if args.size else 6000
 
-
+    raw_source = lexier(args.source)
+    if raw_source:
+        ast = parser(raw_source)
+        if ast:
+            interpreter(ast, stack_size)
 
 if __name__ == '__main__':
     main()
