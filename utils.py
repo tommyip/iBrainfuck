@@ -6,6 +6,8 @@ def extract_loops(loops):
 
     >>> extract_loops(["++>-[++<-]+-[[+]-][++->[--<+]]"])
     ['++>-', ['++<-'], '+-', [['+'], '-'], ['++->', ['--<+']]]
+
+    # TODO: Refactor!!!! flatten source code.
     """
     new_loops = []
 
@@ -37,7 +39,9 @@ def extract_loops(loops):
                         op_block = ""
                     else:
                         op_block += "]"
+
         if op_block != "":
+            # Prevent missing the last block
             new_loops.append(op_block)
 
     return new_loops
@@ -52,12 +56,11 @@ def in_nD_list(search_list, key):
     for element in search_list:
         if isinstance(element, str):
             if key in element:
-                return True
+                break
         else:
             if in_nD_list(element, key):
-                return True
+                break
+    else:
+        return False
 
-    return False
-
-if __name__ == "__main__":
-    print(extract_loops(["++>-[++<-]+-[[+]-][++->[--<+]]"]))
+    return True

@@ -1,11 +1,27 @@
 #! /usr/bin/python3
+"""
+Name: iBrainfuck
+Author: Tommy Ip <hkmp7tommy@gmail.com>
+Github repo: https://gituhub.com/tommyip/iBrainfuck
 
+iBrainfuck is a interpreter for the language Brainfuck implementated in Python 3
+
+Testing are handled by Pytest, invoke them by running:
+
+    ~$ py.test
+
+in the project's root path. Unittest are in tests/ directory and
+doctest are inline with source code.
+
+Coming features include:
+    - PyPy 3 support
+    - Code Optimization
+"""
+
+from sys import stderr
 import argparse
 import getch
-
-from .utils import extract_loops
-
-STACK_SIZE = 1000
+from utils import extract_loops
 
 
 def lexier(filename):
@@ -14,10 +30,11 @@ def lexier(filename):
     >>> lexier("tests/bf_source_normal.bf")
     '+++++++++[>++++++++++<-]>+++++++.'
 
+    """
     # TODO: Error checking
     # TODO: Convert to polymorphic function to handle both file and string argument input
     # TODO: Handle comments in loop block (when pointer value = 0)
-    """
+
     try:
         with open(filename) as file:
             return "".join(filter(
@@ -26,83 +43,82 @@ def lexier(filename):
             ))
 
     except IOError:
-        print("[-] iBrainfuck cannot open source code with filename", filename)
+        print("[-] iBrainfuck cannot open source code with filename " + filename, file=stderr)
 
     return False
 
 
 def parser(source):
-    """ Indentify and group blocks to a list element
+    """ Parse raw source code from lexier to a semi-AST like data structure
 
     >>> parser("+++++++++[>++++++++++<-]>+++++++.")
     ['+++++++++', ['>++++++++++<-'], '>+++++++.']
 
     >>> parser("+++++[>+++[>+>-<<]<-]")
     ['+++++', ['>+++', ['>+>-<<'], '<-']]
+
     """
+    # TODO: Optimise source code
+
     # Syntax checking: Check brackets balance
     if source.count("[") != source.count("]"):
-        print("[-] Syntax Error: unmatched brackets")
+        print("[-] Syntax Error: unmatched brackets", file=stderr)
         return False
 
     return extract_loops([source])
 
 
-def interpreter(code_blocks, interactive=True):
-    """ Run code generated from lexier
+def interpreter(ast, size):
+    """ Execute code generated from parser
 
-    >>> interpreter(["+++++++++", "[>++++++++++<-]", ">+++++++."], False)
-    'a'
+    >>> interpreter(["+++++++++", [">++++++++++<-"], ">+++++++."], 10)
+    a
+    >>> interpreter(["++++++++", [">++++", [">++>+++>+++>+<<<<-"], ">+>+>->>+", ["<"], "<-"], \
+        ">>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."], 20)
+    Hello World!
+
     """
-    stack = [0 for _ in range(STACK_SIZE)]
+    stack = [0] * size
     pointer = 0
-    output = ""
 
-    for block in code_blocks:
-        is_loop = False
-        counter = 0
+    for block in ast:
+        stack, pointer = evaluate(stack, block, pointer)
 
-        if block[0] == "[":
-            is_loop = True
-            counter_pointer = pointer
-            counter = stack[counter_pointer]
-            # String bracketsblog
-            block = block[1:-1]
 
-        while counter > 1 or not is_loop:
-            if is_loop:
-                counter = stack[counter_pointer]
-            for op in block:
-                if op == "+":
-                    stack[pointer] += 1
-                elif op == "-":
-                    stack[pointer] -= 1
-                elif op == ">":
-                    pointer += 1
-                elif op == "<":
+def evaluate(stack, block, pointer):
+    if isinstance(block, str):
+        # Commands structure
+        for op in block:
+            if op == ">":
+                pointer += 1
+            elif op == "<":
+                if pointer > 0:
                     pointer -= 1
-                elif op == ".":
-                    display = chr(stack[pointer])
-                    if interactive:
-                        print(display)
-                    else:
-                        output += display
-                elif op == ",":
-                    stack[pointer] == getch.getch()
-
-            if not is_loop:
-                break
-
-    if not interactive:
-        return output
+            elif op == ",":
+                stack[pointer] = ord(getch.getch())
+            elif op == ".":
+                print(chr(stack[pointer]), end="", flush=True)
+            elif op == "+":
+                stack[pointer] += 1
+            elif op == "-":
+                stack[pointer] -= 1
+    else:
+        # loop structure
+        counter = stack[pointer]
+        while counter > 0:
+            for code in block:
+                stack, pointer = evaluate(stack, code, pointer)
+                counter = stack[pointer]
+    return stack, pointer
 
 
 def main():
-    # Get filename from command line arguments
-    parser = argparse.ArgumentParser(description="A Brainfuck interpreter")
-    parser.add_argument("source", help="Brainfuck source code")
+    parser = argparse.ArgumentParser(description="iBrainfuck -> A brainfuck interpreter implementation in Python")
+    parser.add_argument("source", help="Brainfuck source file [.bf]")
+    parser.add_argument("-s", "--size", help="The size of the brainfuck array, default: 6000", type=int)
     args = parser.parse_args()
-    print(args)
+
+    stack_size = args.size if args.size else 6000
 
 if __name__ == '__main__':
     main()
