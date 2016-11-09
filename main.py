@@ -11,8 +11,8 @@ Testing are handled by Pytest, invoke them by running:
     ~$ py.test
 
 in the project's root path. You have to install the pytest plugin `pytest-pythonpath` in order
-for pytest to properly detect the directories. Unittest are in tests/ directory and doctest are
-inline with source code.
+for pytest to properly detect the directories. Unittest are in tests/ directory and doctest
+while inline with source code.
 
 Coming features include:
     - PyPy 3 support
@@ -30,7 +30,6 @@ def lexier(filename):
 
     >>> lexier("tests/bf_source_normal.bf")
     '+++++++++[>++++++++++<-]>+++++++.'
-
     """
     # TODO: Error checking
     # TODO: Convert to polymorphic function to handle both file and string argument input
@@ -39,7 +38,7 @@ def lexier(filename):
     try:
         with open(filename) as file:
             return "".join(filter(
-                lambda string: string in "><+-,.[]",
+                lambda char: char in "><+-,.[]",
                 file.read()
             ))
 
@@ -51,17 +50,16 @@ def lexier(filename):
 
 def parser(source):
     """ Parse raw source code from lexier to a semi-AST like data structure
+    while loops are nested to sublist.
 
     >>> parser("+++++++++[>++++++++++<-]>+++++++.")
     ['+++++++++', ['>++++++++++<-'], '>+++++++.']
 
     >>> parser("+++++[>+++[>+>-<<]<-]")
     ['+++++', ['>+++', ['>+>-<<'], '<-']]
-
     """
     # TODO: Optimise source code
 
-    # Syntax checking: Check brackets balance
     if source.count("[") != source.count("]"):
         print("[-] Syntax Error: unmatched brackets", file=sys.stderr)
         return False
@@ -77,7 +75,6 @@ def interpreter(ast, size):
     >>> interpreter(["++++++++", [">++++", [">++>+++>+++>+<<<<-"], ">+>+>->>+", ["<"], "<-"], \
         ">>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."], 20)
     Hello World!
-
     """
     stack = [0] * size
     pointer = 0
@@ -87,14 +84,14 @@ def interpreter(ast, size):
 
 
 def evaluate(stack, block, pointer):
+    """ Recursively execute code blocks. """
     if isinstance(block, str):
         # Commands structure
         for op in block:
             if op == ">":
                 pointer += 1
             elif op == "<":
-                if pointer > 0:
-                    pointer -= 1
+                pointer -= 1
             elif op == ",":
                 stack[pointer] = ord(getch.getch())
             elif op == ".":

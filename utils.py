@@ -6,30 +6,30 @@ def extract_loops(loops):
 
     >>> extract_loops(["++>-[++<-]+-[[+]-][++->[--<+]]"])
     ['++>-', ['++<-'], '+-', [['+'], '-'], ['++->', ['--<+']]]
-
-    # TODO: Refactor!!!! flatten source code.
     """
     new_loops = []
 
     for loop in loops:
-        brackets_count = 0
+        brackets = 0
         op_block = ""
         for op in loop:
             if op not in "[]":
                 op_block += op
+
             else:
                 if op == "[":
-                    if brackets_count == 0:
+                    if not brackets:
                         # Non loop structure
                         if op_block != "":
                             new_loops.append(op_block)
                             op_block = ""
                     else:
                         op_block += "["
-                    brackets_count += 1
+                    brackets += 1
+
                 elif op == "]":
-                    brackets_count -= 1
-                    if brackets_count == 0:
+                    brackets -= 1
+                    if not brackets:
                         # Loop structure
                         if "[" in op_block or "]" in op_block:
                             op_block = extract_loops([op_block])
@@ -41,7 +41,6 @@ def extract_loops(loops):
                         op_block += "]"
 
         if op_block != "":
-            # Prevent missing the last block
             new_loops.append(op_block)
 
     return new_loops
@@ -56,11 +55,8 @@ def in_nD_list(search_list, key):
     for element in search_list:
         if isinstance(element, str):
             if key in element:
-                break
-        else:
-            if in_nD_list(element, key):
-                break
-    else:
-        return False
+                return True
+        elif in_nD_list(element, key):
+            return True
 
-    return True
+    return False
