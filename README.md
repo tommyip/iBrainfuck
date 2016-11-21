@@ -1,12 +1,10 @@
 # iBrainfuck
-iBrainfuck is a interpreter for the brainfuck lanugage written in Python3. Nested loops are supported.
+iBrainfuck is a brainfuck interpreter written in Python3. The current version support most features:
+  1. Brainfuck operators: `> < + - , . [ ]`
+  2. Nested loops  
 
 # Usage
-To interprete a brainfuck source file, run the following command in your terminal:
-```bash
-~$ ./main.py [source.bf]
+To execute a brainfuck program, run the following command in your terminal:
 ```
-You will need to make the script executable by issuing the following command:
-```bash
-~$ chmod +x main.py
+~$ python3 main.py [source.bf]
 ```
