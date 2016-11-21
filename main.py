@@ -4,7 +4,7 @@ Name: iBrainfuck
 Author: Tommy Ip <hkmp7tommy@gmail.com>
 Github repo: https://gituhub.com/tommyip/iBrainfuck
 
-iBrainfuck is a interpreter for the Brainfuck language written in Python 3
+iBrainfuck is a Brainfuck interpreter written in Python 3.
 
 Testing are handled by Pytest, invoke them by running:
 
@@ -13,44 +13,45 @@ Testing are handled by Pytest, invoke them by running:
 in the project's root path. You have to install the pytest plugin `pytest-pythonpath` in order
 for pytest to properly detect the directories. Unittest are in tests/ directory and doctest
 while inline with source code.
-
-Coming features include:
-    - PyPy 3 support
-    - Code Optimization
 """
 
-import sys
 import argparse
 import getch
-from utils import extract_loops
+import sys
 
 
-def lexier(filename):
+def lexier(source, isfile=True):
     """ Extract all brainfuck operators into a Python string
 
     >>> lexier("tests/bf_source_normal.bf")
     '+++++++++[>++++++++++<-]>+++++++.'
     """
-    # TODO: Error checking
-    # TODO: Convert to polymorphic function to handle both file and string argument input
     # TODO: Handle comments in loop block (when pointer value = 0)
 
     try:
-        with open(filename) as file:
-            return "".join(filter(
-                lambda char: char in "><+-,.[]",
-                file.read()
-            ))
+        if isfile:
+            with open(source) as f:
+                source = f.read()
+
+        source = "".join(filter(
+            lambda char: char in "><+-,.[]",
+            source
+        ))
+
+        # Error checking
+        if source.count("[") != source.count("]"):
+            print("[-] Syntax Error: unmatched brackets", file=sys.stderr)
+            return False
+
+        return source
 
     except IOError:
-        print("[-] iBrainfuck cannot open source code with filename " + filename, file=sys.stderr)
-
-    return False
+        print("[-] iBrainfuck cannot open source code with filename " + source, file=sys.stderr)
+        return False
 
 
 def parser(source):
-    """ Parse raw source code from lexier to a semi-AST like data structure
-    while loops are nested to sublist.
+    """ Parse raw source code to a semi-AST like data structure
 
     >>> parser("+++++++++[>++++++++++<-]>+++++++.")
     ['+++++++++', ['>++++++++++<-'], '>+++++++.']
@@ -60,11 +61,43 @@ def parser(source):
     """
     # TODO: Optimise source code
 
-    if source.count("[") != source.count("]"):
-        print("[-] Syntax Error: unmatched brackets", file=sys.stderr)
-        return False
+    new_loops = []
 
-    return extract_loops([source])
+    for loop in [source]:
+        brackets = 0
+        op_block = ""
+        for op in loop:
+            if op not in "[]":
+                op_block += op
+
+            else:
+                if op == "[":
+                    if not brackets:
+                        # Non loop structure
+                        if op_block != "":
+                            new_loops.append(op_block)
+                            op_block = ""
+                    else:
+                        op_block += "["
+                    brackets += 1
+
+                elif op == "]":
+                    brackets -= 1
+                    if not brackets:
+                        # Loop structure
+                        if "[" in op_block or "]" in op_block:
+                            op_block = parser(op_block)
+                        else:
+                            op_block = [op_block]
+                        new_loops.append(op_block)
+                        op_block = ""
+                    else:
+                        op_block += "]"
+
+        if op_block != "":
+            new_loops.append(op_block)
+
+    return new_loops
 
 
 def interpreter(ast, size):
@@ -80,10 +113,10 @@ def interpreter(ast, size):
     pointer = 0
 
     for block in ast:
-        stack, pointer = evaluate(stack, block, pointer)
+        stack, pointer = _evaluate(stack, block, pointer)
 
 
-def evaluate(stack, block, pointer):
+def _evaluate(stack, block, pointer):
     """ Recursively execute code blocks. """
     if isinstance(block, str):
         # Commands structure
@@ -105,7 +138,7 @@ def evaluate(stack, block, pointer):
         counter = stack[pointer]
         while counter > 0:
             for code in block:
-                stack, pointer = evaluate(stack, code, pointer)
+                stack, pointer = _evaluate(stack, code, pointer)
                 counter = stack[pointer]
     return stack, pointer
 

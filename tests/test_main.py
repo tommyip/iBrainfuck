@@ -9,6 +9,10 @@ def test_lexier(capfd):
     # Test normal source code from file
     assert lexier("tests/bf_source_normal.bf") == "+++++++++[>++++++++++<-]>+++++++."
 
+    # Test input from string
+    assert lexier("+++++++++ comments [ > ++++++++++ <- ] > +++++++.  end", False) == \
+        "+++++++++[>++++++++++<-]>+++++++."
+
     # Test blank source code from file
     assert lexier("tests/bf_source_no_code.bf") == ""
 
@@ -17,9 +21,10 @@ def test_lexier(capfd):
     _, err = capfd.readouterr()
     assert err == "[-] iBrainfuck cannot open source code with filename tests/unknown.bf\n"
 
-    # Test source code from string
-    # assert lexier("comments+++++++++[>++++++ loop ++++<-]>+++++++.") == \
-    #     "+++++++++[>++++++++++<-]>+++++++."
+    # Test unmatch brackets
+    lexier("+++++++++[>+++++[+++++<-]>+++++++.", False) is False
+    _, err = capfd.readouterr()
+    assert err == "[-] Syntax Error: unmatched brackets\n"
 
 
 def test_parser(capfd):
@@ -42,11 +47,6 @@ def test_parser(capfd):
 
     # Test 2 dimensional loop
     assert parser("+++++[>+++[>+>-<<]<-]") == ['+++++', ['>+++', ['>+>-<<'], '<-']]
-
-    # Test unmatch brackets
-    parser("+++++++++[>+++++[+++++<-]>+++++++.") is False
-    _, err = capfd.readouterr()
-    assert err == "[-] Syntax Error: unmatched brackets\n"
 
 
 def test_interpreter(capfd):
